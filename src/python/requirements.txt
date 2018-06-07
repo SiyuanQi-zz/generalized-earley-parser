@@ -1,0 +1,11 @@
+torchvision
+numpy
+scipy
+tensorboard
+tensorboard_logger
+sklearn
+scipy
+opencv-python
+matplotlib
+nltk
+cffi
