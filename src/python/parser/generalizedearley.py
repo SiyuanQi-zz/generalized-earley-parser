@@ -106,7 +106,7 @@ class GeneralizedEarley(object):
                 elif nltk.grammar.is_nonterminal(s.next_symbol()):
                     self.predict(m, n, s)
                 elif nltk.grammar.is_terminal(s.next_symbol()):
-                    if m == self._total_frame - 1:
+                    if m == self._total_frame:
                         continue
                     new_l = self.scan(m, n, s)
                     branch_probs[new_l] = self._cached_prob[new_l][self._total_frame]
@@ -126,7 +126,6 @@ class GeneralizedEarley(object):
                 if self._max_prob > max_prefix_prob:
                     print('Find best parse before exhausting all strings.')  # TODO: check validity
                     return self._best_l, self._max_prob
-
         return self._best_l, self._max_prob
 
     def get_log_prob_sum(self):
@@ -259,13 +258,16 @@ class GeneralizedEarley(object):
                 self._cached_prob[l][t] = np.log(self._classifier_output[t, k]) + max_log + np.log(np.exp(self._cached_prob[l][t-1]-max_log) + np.exp(self._cached_prob[l_minus][t-1]-max_log))
 
             # Compute p(l...)
-            max_log = max(self._cached_prob[l][0], np.max(self._cached_prob[l_minus][1:self._total_frame-1]))
+            if self._total_frame == 1:
+                max_log = self._cached_prob[l][0]
+            else:
+                max_log = max(self._cached_prob[l][0], np.max(self._cached_prob[l_minus][0:self._total_frame - 1]))
             self._cached_prob[l][self._total_frame] = np.exp(self._cached_prob[l][0]-max_log)
             for t in range(1, self._total_frame):
                 self._cached_prob[l][self._total_frame] += self._classifier_output[t, k] * np.exp(self._cached_prob[l_minus][t-1]-max_log)
             self._cached_prob[l][self._total_frame] = np.log(self._cached_prob[l][self._total_frame]) + max_log
 
-        # Search according to prefix probability
+        # Search according to prefix probability (Prefix probability stored in the last dimension!!!!!!)
         return self._cached_prob[l][self._total_frame]
 
 
